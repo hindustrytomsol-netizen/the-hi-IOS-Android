@@ -59,6 +59,26 @@ These commands will later be enforced in CI to keep the codebase healthy during 
   - Configures a small service locator for core singletons (config, logger).
   - Wraps `runApp` in a guarded zone (`runZonedGuarded`) and hooks `FlutterError.onError` so uncaught errors are routed through the shared logger.
 
+### Environment Variables (dart-define)
+
+Runtime environment and secret values are provided via `--dart-define` and are **not** committed to this repository.
+
+Example run command:
+
+```bash
+fvm flutter run \
+  --dart-define=APP_ENV=development \
+  --dart-define=SUPABASE_URL=https://your-project.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=your_anon_key
+```
+
+Notes:
+
+- Defaults:
+  - `APP_ENV` defaults to `development` if not provided.
+  - `SUPABASE_URL` and `SUPABASE_ANON_KEY` are optional for now and may be `null` in development.
+- Secrets are **never** committed to the repo; CI and deployment environments must provide the appropriate `--dart-define` values.
+
 ### SDK binaries and version control
 
 Do **not** commit SDK binaries.

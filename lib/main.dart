@@ -17,10 +17,14 @@ Future<void> _bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final AppLogger logger = const DebugPrintAppLogger();
-  final AppConfig config = AppConfig.development();
+  final AppConfig config = AppConfig.fromEnvironment(logger: logger);
 
   registerSingleton<AppLogger>(logger);
   registerSingleton<AppConfig>(config);
+
+  logger.i(
+    'App started in ${config.environment.name.toUpperCase()} mode',
+  );
 
   FlutterError.onError = (FlutterErrorDetails details) {
     logger.e(
