@@ -40,6 +40,24 @@ fvm flutter run
 - Static analysis: `fvm flutter analyze`
 - Clean build artifacts: `fvm flutter clean`
 
+### Quality gates
+
+Before opening a PR or merging changes, run:
+
+- Format code: `fvm flutter format .`
+- Static analysis: `fvm flutter analyze`
+- Tests: `fvm flutter test`
+
+These commands will later be enforced in CI to keep the codebase healthy during the migration.
+
+### Dependency and lockfile policy
+
+- This is an **application** repository, so `pubspec.lock` is committed to version control for reproducible builds.
+- Always use FVM when modifying dependencies or refreshing the lockfile:
+  - `fvm flutter pub get`
+  - `fvm flutter pub upgrade` (only in intentional dependency-update work)
+- Do **not** run plain `flutter pub ...` in this repo; always go through `fvm flutter ...`.
+
 ### Repository structure (high-level)
 
 - `docs/` – environment / roadmap / SDK issue documentation
