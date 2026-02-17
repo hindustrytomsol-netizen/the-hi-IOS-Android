@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:the_hi_ios_android/core/config/app_environment.dart';
 
 import 'app/app.dart';
 import 'app/di/service_locator.dart';

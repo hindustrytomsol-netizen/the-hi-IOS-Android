@@ -4,6 +4,7 @@ import '../../app/di/service_locator.dart';
 import '../../core/config/app_config.dart';
 import '../../core/services/supabase_service.dart';
 import '../../core/logging/app_logger.dart';
+import 'package:the_hi_ios_android/core/config/app_environment.dart';
 
 class HealthCheckScreen extends StatefulWidget {
   const HealthCheckScreen({
