@@ -89,6 +89,29 @@ Notes:
   - In **staging/production**, if Supabase config is missing, the app fails fast during bootstrap with a clear error to avoid shipping a broken build.
   - When configured, a `SupabaseService` is initialized and registered in the service locator, and the Health Check screen can run a minimal `profiles` table query.
 
+### Auth (4.1)
+
+- Authentication is implemented using Supabase Auth with email/password sign-in.
+- Routing:
+  - If Supabase is **not configured** (development): shows Health Check screen with configuration instructions.
+  - If Supabase is **configured**:
+    - **Signed out**: shows `AuthScreen` (sign-in form).
+    - **Signed in**: shows `HealthCheckScreen`.
+- Auth state is managed by `AuthController` (extends `ChangeNotifier`), which:
+  - Subscribes to Supabase auth state changes.
+  - Exposes `session`, `user`, `isSignedIn`, `isLoading`, and `errorMessage`.
+  - Provides `signInWithEmail()` and `signOut()` methods.
+- Testing:
+  - Use test credentials from your Supabase project (do not commit real credentials).
+  - Example run command with auth-enabled Supabase:
+    ```bash
+    fvm flutter run \
+      --dart-define=APP_ENV=development \
+      --dart-define=SUPABASE_URL=https://your-project.supabase.co \
+      --dart-define=SUPABASE_ANON_KEY=your_anon_key
+    ```
+  - After signing in, the app transitions to the Health Check screen.
+
 ### SDK binaries and version control
 
 Do **not** commit SDK binaries.

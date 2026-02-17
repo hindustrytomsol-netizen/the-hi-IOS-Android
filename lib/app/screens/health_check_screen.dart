@@ -6,6 +6,7 @@ import '../../core/config/app_config.dart';
 import '../../core/config/app_environment.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/services/supabase_service.dart';
+import '../../features/profile/presentation/profile_controller.dart';
 
 class HealthCheckScreen extends StatefulWidget {
   const HealthCheckScreen({
@@ -13,11 +14,13 @@ class HealthCheckScreen extends StatefulWidget {
     this.config,
     this.logger,
     this.supabaseService,
+    this.profileController,
   });
 
   final AppConfig? config;
   final AppLogger? logger;
   final SupabaseService? supabaseService;
+  final ProfileController? profileController;
 
   @override
   State<HealthCheckScreen> createState() => _HealthCheckScreenState();
@@ -121,7 +124,7 @@ class _HealthCheckScreenState extends State<HealthCheckScreen> {
       return;
     }
     try {
-      await _supabase!.client.auth.signOut();
+      await _supabase.client.auth.signOut();
       setState(() {
         _statusMessage = 'Signed out successfully.';
       });
@@ -153,6 +156,9 @@ class _HealthCheckScreenState extends State<HealthCheckScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildConfigSummaryCard(theme),
+            const SizedBox(height: 16),
+            if (_supabaseConfigured && _supabase!.isSignedIn)
+              _buildProfileSection(theme),
             const SizedBox(height: 16),
             if (_supabaseConfigured)
               ElevatedButton(
@@ -252,10 +258,11 @@ class _HealthCheckScreenState extends State<HealthCheckScreen> {
   }
 
   Widget _buildConfigSummaryCard(ThemeData theme) {
+    final bool hasUrl = (_config.supabaseUrl?.isNotEmpty ?? false);
+
     final Uri? supabaseUri =
-        _config.supabaseUrl != null && _config.supabaseUrl!.isNotEmpty
-            ? Uri.tryParse(_config.supabaseUrl!)
-            : null;
+        hasUrl ? Uri.tryParse(_config.supabaseUrl!) : null;
+
     final String hostLabel = supabaseUri?.host ?? 'N/A';
 
     return Card(
@@ -273,6 +280,87 @@ class _HealthCheckScreenState extends State<HealthCheckScreen> {
             Text('Supabase configured: $_supabaseConfigured'),
             Text('Signed in: $_signedInLabel'),
             Text('Supabase host: $hostLabel'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileSection(ThemeData theme) {
+    ProfileController? profileController = widget.profileController;
+    if (profileController == null) {
+      try {
+        profileController = getIt<ProfileController>();
+      } on StateError {
+        // ProfileController not registered, skip profile section.
+        return const SizedBox.shrink();
+      }
+    }
+
+    return ListenableBuilder(
+      listenable: profileController,
+      builder: (BuildContext context, Widget? child) {
+        return _buildProfileCard(theme, profileController!);
+      },
+    );
+  }
+
+  Widget _buildProfileCard(ThemeData theme, ProfileController controller) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'My Profile',
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            if (controller.isLoading)
+              const Row(
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  SizedBox(width: 8),
+                  Text('Loading profile...'),
+                ],
+              )
+            else if (controller.errorMessage != null) ...[
+              Text(
+                'Error loading profile',
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: theme.colorScheme.error),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                controller.errorMessage!,
+                style: theme.textTheme.bodySmall,
+              ),
+            ]
+            else if (controller.hasProfile) ...[
+              Text('ID: ${controller.profile!.id}'),
+              if (controller.profile!.displayName != null)
+                Text('Display name: ${controller.profile!.displayName}'),
+              if (controller.profile!.username != null)
+                Text('Username: ${controller.profile!.username}'),
+              if (controller.profile!.displayName == null &&
+                  controller.profile!.username == null)
+                Text(
+                  'Profile found (id only)',
+                  style: theme.textTheme.bodySmall,
+                ),
+            ]
+            else
+              Text(
+                'Profile not found',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
           ],
         ),
       ),

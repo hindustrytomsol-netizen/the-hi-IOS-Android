@@ -24,6 +24,7 @@ void main() {
       registerSingleton<AppConfig>(config);
 
       await tester.pumpWidget(const MyApp());
+      await tester.pumpAndSettle();
 
       expect(find.textContaining('Environment:'), findsOneWidget);
       expect(find.textContaining('Supabase is not configured'), findsOneWidget);
