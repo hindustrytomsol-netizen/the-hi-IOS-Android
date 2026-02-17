@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
+import 'screens/health_check_screen.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -12,7 +13,7 @@ class MyApp extends StatelessWidget {
       title: 'the-hi (Flutter migration)',
       theme: AppTheme.light(),
       onGenerateRoute: AppRouter.onGenerateRoute,
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const HealthCheckScreen(),
     );
   }
 }

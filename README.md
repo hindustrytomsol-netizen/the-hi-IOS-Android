@@ -79,6 +79,16 @@ Notes:
   - `SUPABASE_URL` and `SUPABASE_ANON_KEY` are optional for now and may be `null` in development.
 - Secrets are **never** committed to the repo; CI and deployment environments must provide the appropriate `--dart-define` values.
 
+### Supabase bootstrap (3.3)
+
+- Core dependency: `supabase_flutter` (pinned in `pubspec.yaml`).
+- Configuration:
+  - `SUPABASE_URL` and `SUPABASE_ANON_KEY` must be provided via `--dart-define` for non-development environments.
+  - In **development**, Supabase config is optional; the app will show a “Supabase not configured” message and instructions on the Health Check screen.
+- Behavior:
+  - In **staging/production**, if Supabase config is missing, the app fails fast during bootstrap with a clear error to avoid shipping a broken build.
+  - When configured, a `SupabaseService` is initialized and registered in the service locator, and the Health Check screen can run a minimal `profiles` table query.
+
 ### SDK binaries and version control
 
 Do **not** commit SDK binaries.

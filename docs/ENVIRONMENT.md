@@ -67,4 +67,23 @@ Use these commands on macOS with Xcode installed to verify the iOS toolchain:
 - `fvm flutter run -d <ios device>`  <!-- requires a connected iOS device or simulator -->
 
 
+### Supabase configuration (via dart-define)
+
+Supabase configuration is provided at runtime via Dart environment defines and is **never** committed to the repository.
+
+- **SUPABASE_URL**: Supabase project URL (e.g. `https://your-project.supabase.co`)
+- **SUPABASE_ANON_KEY**: Supabase anonymous public key for client-side use
+- **APP_ENV**: One of `development`, `staging`, or `production` (defaults to `development`)
+
+Verification (commands only):
+
+- Run the app without Supabase config (development fallback):
+  - `fvm flutter run`
+- Run the app with Supabase config (health check enabled):
+  - `fvm flutter run --dart-define=APP_ENV=development --dart-define=SUPABASE_URL=https://your-project.supabase.co --dart-define=SUPABASE_ANON_KEY=your_anon_key`
+- Use the in-app Health Check screen to verify:
+  - Environment label
+  - Supabase configured flag
+  - Health check result for the `profiles` table
+
 

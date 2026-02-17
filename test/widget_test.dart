@@ -7,12 +7,22 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:the_hi_ios_android/main.dart';
+import 'package:the_hi_ios_android/app/app.dart';
+import 'package:the_hi_ios_android/app/di/service_locator.dart';
+import 'package:the_hi_ios_android/core/config/app_config.dart';
+import 'package:the_hi_ios_android/core/logging/app_logger.dart';
 
 void main() {
-  testWidgets('App boots and renders home screen', (WidgetTester tester) async {
+  testWidgets('App boots and shows health check info', (WidgetTester tester) async {
+    resetServiceLocator();
+    const AppLogger logger = DebugPrintAppLogger();
+    final AppConfig config = AppConfig.development();
+
+    registerSingleton<AppLogger>(logger);
+    registerSingleton<AppConfig>(config);
+
     await tester.pumpWidget(const MyApp());
 
-    expect(find.text('You have pushed the button this many times:'), findsOneWidget);
+    expect(find.textContaining('Environment:'), findsOneWidget);
   });
 }

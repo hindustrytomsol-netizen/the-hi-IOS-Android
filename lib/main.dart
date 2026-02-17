@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/app.dart';
 import 'app/di/service_locator.dart';
 import 'core/config/app_config.dart';
 import 'core/logging/app_logger.dart';
+import 'core/services/supabase_service.dart';
 
 export 'app/app.dart';
 
@@ -25,6 +27,28 @@ Future<void> _bootstrap() async {
   logger.i(
     'App started in ${config.environment.name.toUpperCase()} mode',
   );
+
+  if (config.environment != AppEnvironment.development &&
+      !config.hasSupabaseConfig) {
+    logger.e(
+      'Supabase configuration missing for non-development environment '
+      '(APP_ENV=${config.environment.name}).',
+    );
+    throw StateError(
+      'Supabase configuration is required for non-development environments. '
+      'Please provide SUPABASE_URL and SUPABASE_ANON_KEY via --dart-define.',
+    );
+  }
+
+  if (config.hasSupabaseConfig) {
+    await Supabase.initialize(
+      url: config.supabaseUrl!,
+      anonKey: config.supabaseAnonKey!,
+    );
+    registerSingleton<SupabaseService>(
+      SupabaseService(logger: logger),
+    );
+  }
 
   FlutterError.onError = (FlutterErrorDetails details) {
     logger.e(
