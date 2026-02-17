@@ -20,14 +20,14 @@ Pinned values for this project:
 - **targetSdkVersion**: managed by the Flutter Gradle plugin via `flutter.targetSdkVersion` for Flutter `3.41.1`
 - **minSdkVersion**: managed by the Flutter Gradle plugin via `flutter.minSdkVersion` for Flutter `3.41.1`
 
-### iOS toolchain (placeholders)
+### iOS toolchain
 
-To be filled in as the migration stabilizes:
+Pinned expectations and placeholders for local setup:
 
-- **Xcode version**: _TBD_
-- **CocoaPods version**: _TBD_
-- **Ruby version / manager**: _TBD_
-- **iOS deployment target**: _TBD_
+- **Xcode version**: _TBD_ (e.g. Xcode 16.x)
+- **CocoaPods version**: _TBD_ (e.g. 1.15.x)
+- **Ruby version / manager**: _TBD_ (system Ruby / rbenv / asdf, etc.)
+- **iOS deployment target**: `13.0` (see `ios/Podfile` and `ios/Runner.xcodeproj/project.pbxproj`)
 
 ### Update policy
 
@@ -56,5 +56,15 @@ Use these commands to verify that the pinned Android toolchain and SDK levels st
 - `fvm flutter doctor -v`
 - `fvm flutter build apk --debug`
 - `fvm flutter build apk --release`  <!-- build-only; may use debug signing config -->
+
+### iOS build verification (commands only)
+
+Use these commands on macOS with Xcode installed to verify the iOS toolchain:
+
+- `fvm flutter doctor -v`
+- `cd ios && pod repo update && pod install`
+- `cd .. && fvm flutter build ios --no-codesign`
+- `fvm flutter run -d <ios device>`  <!-- requires a connected iOS device or simulator -->
+
 
 
