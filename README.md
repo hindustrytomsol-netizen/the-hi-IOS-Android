@@ -1,17 +1,71 @@
-# the_hi_ios_android
+## the-hi (Flutter migration)
 
-A new Flutter project.
+Flutter migration target for **the-hi**, replacing the existing Next.js-based native iOS/Android apps with a single Flutter codebase.
 
-## Getting Started
+This repository contains the Flutter application scaffold and tooling configuration that will serve as the migration target for the-hi’s mobile clients.
 
-This project is a starting point for a Flutter application.
+### Prerequisites
 
-A few resources to get you started if this is your first Flutter project:
+- **git** installed
+- **FVM** installed (Flutter Version Management)
+- Platform tooling for your target(s):
+  - **Android**: Android Studio / Android SDK
+  - **iOS** (macOS only): Xcode, CocoaPods
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+### FVM-only policy
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This repository is **FVM-first**. Do **not** call `flutter` directly.
+
+- Always run in a fresh clone:
+  - `fvm install`
+  - `fvm use -f`
+- Always use FVM for all Flutter commands:
+  - `fvm flutter ...`
+
+### Quickstart
+
+From the repository root:
+
+```bash
+fvm install
+fvm use -f
+fvm flutter pub get
+fvm flutter run
+```
+
+### Common commands
+
+- Fetch dependencies: `fvm flutter pub get`
+- Run tests: `fvm flutter test`
+- Static analysis: `fvm flutter analyze`
+- Clean build artifacts: `fvm flutter clean`
+
+### Quality gates
+
+Before opening a PR or merging changes, run:
+
+- Format code: `fvm flutter format .`
+- Static analysis: `fvm flutter analyze`
+- Tests: `fvm flutter test`
+
+These commands will later be enforced in CI to keep the codebase healthy during the migration.
+
+### Architecture: Foundation (3.1)
+
+- `lib/app/` – application bootstrap, root `MyApp` widget, theme (`app_theme.dart`), and router placeholder (`app_router.dart`).
+- `lib/core/` – cross-cutting utilities such as configuration (`app_config.dart`) and logging (`app_logger.dart`).
+- `lib/features/` – placeholder for upcoming vertical slices (auth, chat, feed, media, etc.).
+- App startup is centralized in `lib/main.dart`, which:
+  - Configures a small service locator for core singletons (config, logger).
+  - Wraps `runApp` in a guarded zone (`runZonedGuarded`) and hooks `FlutterError.onError` so uncaught errors are routed through the shared logger.
+
+### SDK binaries and version control
+
+Do **not** commit SDK binaries.
+
+- FVM-managed SDK directories must remain ignored:
+  - `.fvm/flutter_sdk`
+  - `.fvm/versions`
+
+Only FVM configuration files (such as `.fvmrc` and `.fvm/fvm_config.json`) should be committed to version control, not the SDK binaries themselves.
+
