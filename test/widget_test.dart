@@ -13,16 +13,21 @@ import 'package:the_hi_ios_android/core/config/app_config.dart';
 import 'package:the_hi_ios_android/core/logging/app_logger.dart';
 
 void main() {
-  testWidgets('App boots and shows health check info', (WidgetTester tester) async {
-    resetServiceLocator();
-    const AppLogger logger = DebugPrintAppLogger();
-    final AppConfig config = AppConfig.development();
+  testWidgets(
+    'App boots and shows health check with Supabase not configured message in dev',
+    (WidgetTester tester) async {
+      resetServiceLocator();
+      const AppLogger logger = DebugPrintAppLogger();
+      final AppConfig config = AppConfig.development();
 
-    registerSingleton<AppLogger>(logger);
-    registerSingleton<AppConfig>(config);
+      registerSingleton<AppLogger>(logger);
+      registerSingleton<AppConfig>(config);
 
-    await tester.pumpWidget(const MyApp());
+      await tester.pumpWidget(const MyApp());
 
-    expect(find.textContaining('Environment:'), findsOneWidget);
-  });
+      expect(find.textContaining('Environment:'), findsOneWidget);
+      expect(find.textContaining('Supabase is not configured'), findsOneWidget);
+    },
+  );
 }
+

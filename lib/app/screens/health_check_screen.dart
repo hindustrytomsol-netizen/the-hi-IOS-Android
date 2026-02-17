@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../app/di/service_locator.dart';
 import '../../core/config/app_config.dart';
-import '../../core/services/supabase_service.dart';
+import '../../core/config/app_environment.dart';
 import '../../core/logging/app_logger.dart';
-import 'package:the_hi_ios_android/core/config/app_environment.dart';
+import '../../core/services/supabase_service.dart';
 
 class HealthCheckScreen extends StatefulWidget {
   const HealthCheckScreen({
@@ -31,6 +32,7 @@ class _HealthCheckScreenState extends State<HealthCheckScreen> {
   String? _statusMessage;
   String? _errorMessage;
   List<Map<String, dynamic>>? _rows;
+  bool _showErrorDetails = false;
 
   @override
   void initState() {
@@ -68,6 +70,7 @@ class _HealthCheckScreenState extends State<HealthCheckScreen> {
       _statusMessage = null;
       _errorMessage = null;
       _rows = null;
+      _showErrorDetails = false;
     });
 
     try {
@@ -91,6 +94,49 @@ class _HealthCheckScreenState extends State<HealthCheckScreen> {
     }
   }
 
+  Future<void> _copyRunCommand() async {
+    const String template =
+        'fvm flutter run \\\n'
+        '  --dart-define=APP_ENV=development \\\n'
+        '  --dart-define=SUPABASE_URL=https://your-project.supabase.co \\\n'
+        '  --dart-define=SUPABASE_ANON_KEY=your_anon_key';
+    await Clipboard.setData(const ClipboardData(text: template));
+    setState(() {
+      _statusMessage = 'Run command template copied to clipboard.';
+    });
+  }
+
+  void _clearResult() {
+    setState(() {
+      _isChecking = false;
+      _statusMessage = null;
+      _errorMessage = null;
+      _rows = null;
+      _showErrorDetails = false;
+    });
+  }
+
+  Future<void> _signOut() async {
+    if (!_supabaseConfigured || !_supabase!.isSignedIn) {
+      return;
+    }
+    try {
+      await _supabase!.client.auth.signOut();
+      setState(() {
+        _statusMessage = 'Signed out successfully.';
+      });
+    } catch (error, stackTrace) {
+      _logger.e(
+        'Sign out failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      setState(() {
+        _errorMessage = 'Sign out failed: $error';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -106,14 +152,7 @@ class _HealthCheckScreenState extends State<HealthCheckScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Environment: ${_config.environment.name.toUpperCase()}',
-              style: theme.textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text('Supabase configured: $_supabaseConfigured'),
-            const SizedBox(height: 4),
-            Text('Signed in: $_signedInLabel'),
+            _buildConfigSummaryCard(theme),
             const SizedBox(height: 16),
             if (_supabaseConfigured)
               ElevatedButton(
@@ -123,18 +162,52 @@ class _HealthCheckScreenState extends State<HealthCheckScreen> {
             else
               _buildSupabaseNotConfigured(isDev, theme),
             const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton(
+                  onPressed: _copyRunCommand,
+                  child: const Text('Copy run command'),
+                ),
+                OutlinedButton(
+                  onPressed: _clearResult,
+                  child: const Text('Clear result'),
+                ),
+                if (_supabaseConfigured && _supabase!.isSignedIn)
+                  OutlinedButton(
+                    onPressed: _signOut,
+                    child: const Text('Sign out'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
             if (_statusMessage != null)
               Text(
                 _statusMessage!,
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: Colors.green[700]),
               ),
-            if (_errorMessage != null)
+            if (_errorMessage != null) ...[
               Text(
-                _errorMessage!,
+                'Health check failed',
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: theme.colorScheme.error),
               ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _showErrorDetails = !_showErrorDetails;
+                  });
+                },
+                child: Text(_showErrorDetails ? 'Hide details' : 'Show details'),
+              ),
+              if (_showErrorDetails)
+                SelectableText(
+                  _errorMessage!,
+                  style: theme.textTheme.bodySmall,
+                ),
+            ],
             const SizedBox(height: 16),
             if (_rows != null && _rows!.isNotEmpty)
               Text(
@@ -175,6 +248,34 @@ class _HealthCheckScreenState extends State<HealthCheckScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildConfigSummaryCard(ThemeData theme) {
+    final Uri? supabaseUri =
+        _config.supabaseUrl != null && _config.supabaseUrl!.isNotEmpty
+            ? Uri.tryParse(_config.supabaseUrl!)
+            : null;
+    final String hostLabel = supabaseUri?.host ?? 'N/A';
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Config summary',
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text('Environment: ${_config.environment.name.toUpperCase()}'),
+            Text('Supabase configured: $_supabaseConfigured'),
+            Text('Signed in: $_signedInLabel'),
+            Text('Supabase host: $hostLabel'),
+          ],
+        ),
+      ),
     );
   }
 }

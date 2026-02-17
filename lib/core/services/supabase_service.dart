@@ -19,11 +19,29 @@ class SupabaseService {
 
   /// Minimal health check against the `profiles` table.
   ///
-  /// Returns up to one row with a small subset of columns, if present.
+  /// Tries a `select('*')` with `limit(1)`, and if that fails, falls back to
+  /// selecting only the `id` column. Always returns a list of maps.
   Future<List<Map<String, dynamic>>> healthCheckProfiles() async {
+    // First attempt: select all columns with limit 1.
     try {
       final dynamic response =
-          await _client.from('profiles').select('id, display_name').limit(1);
+          await _client.from('profiles').select().limit(1);
+
+      if (response is List) {
+        return response.cast<Map<String, dynamic>>();
+      }
+    } catch (error, stackTrace) {
+      _logger.w(
+        'Supabase profiles health check (select *) failed, falling back to id-only query',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    // Fallback: select only `id` with limit 1.
+    try {
+      final dynamic response =
+          await _client.from('profiles').select('id').limit(1);
 
       if (response is List) {
         return response.cast<Map<String, dynamic>>();
@@ -32,7 +50,7 @@ class SupabaseService {
       return const <Map<String, dynamic>>[];
     } catch (error, stackTrace) {
       _logger.e(
-        'Supabase profiles health check failed',
+        'Supabase profiles health check fallback (id-only) failed',
         error: error,
         stackTrace: stackTrace,
       );
@@ -40,4 +58,5 @@ class SupabaseService {
     }
   }
 }
+
 

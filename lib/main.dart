@@ -9,6 +9,7 @@ import 'app/di/service_locator.dart';
 import 'core/config/app_config.dart';
 import 'core/logging/app_logger.dart';
 import 'core/services/supabase_service.dart';
+import 'app/screens/misconfiguration_screen.dart';
 
 export 'app/app.dart';
 
@@ -29,19 +30,11 @@ Future<void> _bootstrap() async {
     'App started in ${config.environment.name.toUpperCase()} mode',
   );
 
-  if (config.environment != AppEnvironment.development &&
-      !config.hasSupabaseConfig) {
-    logger.e(
-      'Supabase configuration missing for non-development environment '
-      '(APP_ENV=${config.environment.name}).',
-    );
-    throw StateError(
-      'Supabase configuration is required for non-development environments. '
-      'Please provide SUPABASE_URL and SUPABASE_ANON_KEY via --dart-define.',
-    );
-  }
+  final bool needsSupabase =
+      config.environment != AppEnvironment.development;
+  final bool misconfigured = needsSupabase && !config.hasSupabaseConfig;
 
-  if (config.hasSupabaseConfig) {
+  if (!misconfigured && config.hasSupabaseConfig) {
     await Supabase.initialize(
       url: config.supabaseUrl!,
       anonKey: config.supabaseAnonKey!,
@@ -59,8 +52,12 @@ Future<void> _bootstrap() async {
     );
   };
 
+  final Widget root = misconfigured
+      ? const MisconfigurationApp()
+      : const MyApp();
+
   runZonedGuarded(
-    () => runApp(const MyApp()),
+    () => runApp(root),
     (Object error, StackTrace stackTrace) {
       logger.e(
         'Uncaught zone error',
